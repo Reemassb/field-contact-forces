@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field or Contact?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --navy:#14284b;--navy2:#1f3a68;--teal:#0f9b8e;--teal-d:#0b7a70;--teal-l:#e0f4f1;
+  --amber:#f2a541;--amber-l:#fff3e0;--bg:#f4f7fb;--text:#1d2939;--muted:#5b6b82;--line:#dbe3ee;
+  --ok:#1a9e5c;--ok-l:#e3f6ec;--bad:#d64545;--bad-l:#fde8e8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Nunito',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+input,textarea,select,button{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+/* Header */
+.top{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:24px 0 28px;border-bottom:5px solid var(--amber)}
+.brand{font-weight:800;letter-spacing:.08em;font-size:.78rem;text-transform:uppercase;color:var(--amber)}
+.top h1{margin:6px 0 6px;font-size:clamp(1.5rem,3.6vw,2.3rem);font-weight:800;line-height:1.15}
+.top p{margin:0;opacity:.88;max-width:760px}
+
+/* Sticky student bar */
+.sticky{position:sticky;top:0;z-index:30;background:rgba(244,247,251,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.student{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:12px 0}
+.fld{display:flex;flex-direction:column;gap:3px;flex:1 1 200px}
+.fld label{font-size:.74rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.fld label small{text-transform:none;letter-spacing:0;font-weight:600}
+.fld input{padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:#fff}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,155,142,.18)}
+.prog{flex:1 1 240px}
+.prog .txt{font-size:.78rem;color:var(--muted);font-weight:800;margin-bottom:5px}
+.bar{height:10px;background:#e1e8f1;border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--amber));transition:width .3s}
+
+/* Intro */
+.intro{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:14px;margin:22px 0}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.box h2{margin:0 0 6px;font-size:1rem}
+.box ol{margin:0;padding-left:20px}
+.box ol li{margin:2px 0}
+.def p{margin:0;color:var(--muted)}
+.def.contact{border-left:6px solid var(--amber)}
+.def.field{border-left:6px solid var(--teal)}
+.def .tag{display:inline-block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:99px;margin-bottom:6px}
+.def.contact .tag{background:var(--amber-l);color:#a8650f}
+.def.field .tag{background:var(--teal-l);color:var(--teal-d)}
+@media(max-width:860px){.intro{grid-template-columns:1fr}}
+
+/* Scenario cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,480px),1fr));gap:18px}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(20,40,75,.05);display:flex;flex-direction:column;transition:border-color .2s}
+.card.done{border-color:var(--teal)}
+.chead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.num{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.9rem;flex:none}
+.chead h3{margin:0;font-size:1.06rem;flex:1}
+.status{font-size:.74rem;font-weight:800;color:var(--muted);background:var(--bg);padding:3px 10px;border-radius:99px;white-space:nowrap}
+.card.done .status{background:var(--teal-l);color:var(--teal-d)}
+.scene{background:#eef5fb;border-bottom:1px solid var(--line)}
+.scene svg{display:block;width:100%;height:auto;max-height:240px}
+.fv line{stroke:#e07b00;stroke-width:3.5;stroke-linecap:round}
+.fv polygon{fill:#e07b00}
+.fv circle{fill:var(--navy);stroke:#fff;stroke-width:1.5}
+.fv text{fill:#fff;font:800 11px 'Nunito',sans-serif;text-anchor:middle}
+.desc{margin:0;padding:12px 14px 4px;color:var(--muted)}
+.forces{padding:8px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.frow{display:grid;grid-template-columns:auto 1fr;gap:7px 10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}
+.badge{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:.8rem;display:grid;place-items:center}
+.ftext{font-weight:700}
+.sels{grid-column:1/-1;display:grid;grid-template-columns:1.35fr 1fr;gap:8px}
+select{width:100%;padding:8px 10px;border:2px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-size:.93rem}
+select.filled{border-color:#a9bbd1}
+select.ok{border-color:var(--ok);background:var(--ok-l)}
+select.bad{border-color:var(--bad);background:var(--bad-l)}
+select.empty{border-color:var(--amber);background:var(--amber-l)}
+
+/* Reflection + actions */
+.reflect{margin:22px 0 0}
+.reflect textarea{width:100%;min-height:110px;padding:12px;border:2px solid var(--line);border-radius:12px;resize:vertical;margin-top:6px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 10px}
+.btn{border:none;border-radius:12px;padding:13px 20px;font-weight:800;cursor:pointer}
+.btn.primary{background:var(--amber);color:var(--navy)}
+.btn.teal{background:var(--teal);color:#fff}
+.btn.ghost{background:#fff;color:var(--muted);border:2px solid var(--line)}
+.btn:hover:not(:disabled){filter:brightness(1.06)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.result{display:none;background:#fff;border:1px solid var(--line);border-left:6px solid var(--teal);border-radius:12px;padding:12px 16px;margin-bottom:10px}
+.result.show{display:block}
+.key{display:inline-flex;gap:12px;margin-left:8px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
+.k{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:2px solid}
+.k.ok{background:var(--ok-l);border-color:var(--ok)}
+.k.bad{background:var(--bad-l);border-color:var(--bad)}
+.k.empty{background:var(--amber-l);border-color:var(--amber)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;max-width:min(92vw,520px);text-align:center;opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--bad)}
+.toast.ok{background:var(--ok)}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:30px 16px 40px}
+
+@media(max-width:600px){
+  .sticky{position:static}
+  .sels{grid-template-columns:1fr}
+  select,.fld input{font-size:16px}
+  .btn{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">PhysicsFlow</div>
+    <h1 id="appTitle">Field or Contact? Forces in Real Life</h1>
+    <p>Each scene shows real-life forces as lettered arrows. Identify the type of each force and decide whether it is a <strong>field</strong> force or a <strong>contact</strong> force.</p>
+  </div>
+</header>
+
+<div class="sticky">
+  <div class="wrap student">
+    <div class="fld">
+      <label for="sName">Student name <small>(English letters)</small></label>
+      <input id="sName" type="text" autocomplete="name" placeholder="e.g. Sara Ahmad">
+    </div>
+    <div class="fld" style="flex:0 1 170px">
+      <label for="sGrade">Grade / Class</label>
+      <input id="sGrade" type="text" placeholder="e.g. 9B">
+    </div>
+    <div class="prog">
+      <div class="txt" id="progTxt">0 / 0 boxes completed</div>
+      <div class="bar"><span id="progBar"></span></div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="intro">
+    <div class="box">
+      <h2>How to complete this activity</h2>
+      <ol>
+        <li>Type your name and grade at the top.</li>
+        <li>Read each scene. The letter on each orange arrow matches a force below it.</li>
+        <li>For every force, choose its <strong>type</strong> and whether it is <strong>field</strong> or <strong>contact</strong>.</li>
+        <li id="checkStep">Use <em>Check my answers</em> to see which boxes are right (limited checks).</li>
+        <li>Download your PDF and submit it to your teacher.</li>
+      </ol>
+    </div>
+    <div class="box def contact">
+      <span class="tag">Contact force</span>
+      <p>Acts only when the two objects are <strong>touching</strong>.</p>
+    </div>
+    <div class="box def field">
+      <span class="tag">Field force</span>
+      <p>Acts <strong>across a distance</strong> through a field. The objects do not need to touch. Also called a non-contact force.</p>
+    </div>
+  </section>
+
+  <section id="scenarios" class="grid"></section>
+
+  <section class="box reflect">
+    <h2>Reflection</h2>
+    <div id="reflectQ" style="color:var(--muted)"></div>
+    <textarea id="reflection" placeholder="Write your answer here (English letters)..."></textarea>
+  </section>
+
+  <div class="actions">
+    <button class="btn teal" id="btnCheck" type="button">Check my answers</button>
+    <button class="btn primary" id="btnPdf" type="button">Download my PDF</button>
+    <button class="btn ghost" id="btnReset" type="button">Clear answers</button>
+  </div>
+  <div class="result" id="result"></div>
+</main>
+
+<footer>PhysicsFlow · Field &amp; Contact Forces</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   TEACHER SETTINGS — edit these values to suit your class
+   ===================================================================== */
+const CONFIG = {
+  appTitle: "Field or Contact? Forces in Real Life",
+  allowCheck: true,          // let students check answers (shows right/wrong only, never the answer)
+  maxChecks: 2,              // number of checks allowed; 0 = unlimited
+  showCorrectInPDF: false,   // true = add a "Correct answer" column to the student's PDF
+  shuffleScenarios: false    // true = scenarios appear in a random order
+};
+const REFLECTION_Q = "Give one NEW example of a contact force and one NEW example of a field force (not from this activity). Explain how you decided which category each one belongs to.";
+
+/* Force types offered in every drop-down */
+const FORCE_TYPES = [
+  {id:"gravity",  label:"Gravitational force (Weight)"},
+  {id:"normal",   label:"Normal force"},
+  {id:"friction", label:"Friction"},
+  {id:"tension",  label:"Tension"},
+  {id:"applied",  label:"Applied force"},
+  {id:"air",      label:"Air resistance (Drag)"},
+  {id:"buoyant",  label:"Buoyant force (Upthrust)"},
+  {id:"spring",   label:"Spring (Elastic) force"},
+  {id:"magnetic", label:"Magnetic force"},
+  {id:"electric", label:"Electric (Electrostatic) force"},
+  {id:"thrust",   label:"Thrust"},
+  {id:"lift",     label:"Lift"}
+];
+
+/* ---------- drawing helper: force arrow with a lettered label ---------- */
+function arr(x1,y1,x2,y2,L,at){
+  const a=Math.atan2(y2-y1,x2-x1),c=Math.cos(a),s=Math.sin(a),h=10,w=5.5;
+  const bx=x2-h*c,by=y2-h*s,P=(x,y)=>x.toFixed(1)+","+y.toFixed(1);
+  const lx=at==="tail"?x1-13*c:x2+13*c, ly=at==="tail"?y1-13*s:y2+13*s;
+  return `<g class="fv"><line x1="${x1}" y1="${y1}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}"/>`+
+    `<polygon points="${P(x2,y2)} ${P(bx+w*s,by-w*c)} ${P(bx-w*s,by+w*c)}"/>`+
+    `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="9"/><text x="${lx.toFixed(1)}" y="${(ly+3.8).toFixed(1)}">${L}</text></g>`;
+}
+const SKY = `<rect width="280" height="210" fill="#eef5fb"/>`;
+const NAVY="#14284b", TEAL="#0f9b8e", AMBER="#f2a541";
+
+/* =====================================================================
+   SCENARIOS — each force: d = description, type = accepted answer(s),
+   cat = "field" or "contact". Arrow letters follow the order of forces.
+   ===================================================================== */
+const SCENARIOS = [
+{
+  title:"Book on a Table",
+  text:"A physics textbook rests on a classroom table. It is not moving.",
+  forces:[
+    {d:"The Earth pulls the book downward.", type:["gravity"], cat:"field"},
+    {d:"The table pushes up on the book.", type:["normal"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect x="40" y="122" width="200" height="11" rx="2" fill="#a0703f"/>
+    <rect x="56" y="133" width="10" height="72" fill="#8a5d33"/><rect x="214" y="133" width="10" height="72" fill="#8a5d33"/>
+    <rect x="102" y="94" width="76" height="28" rx="3" fill="${NAVY}"/><rect x="102" y="94" width="10" height="28" fill="${TEAL}"/>
+    <path d="M118 100 h50 M118 106 h50 M118 112 h50" stroke="#ffffff55" stroke-width="2"/>
+    ${arr(140,108,140,180,"A")}${arr(140,108,140,45,"B")}`
+},
+{
+  title:"Kicking a Football",
+  text:"A student kicks a football that was resting on the grass. Think about the instant the foot touches the ball.",
+  forces:[
+    {d:"The student's foot pushes the ball forward.", type:["applied"], cat:"contact"},
+    {d:"The Earth pulls the ball downward.", type:["gravity"], cat:"field"},
+    {d:"The grass pushes up on the ball.", type:["normal"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect y="150" width="280" height="60" fill="#7cc47a"/><path d="M0 150 h280" stroke="#4f9e4d" stroke-width="3"/>
+    <path d="M70 30 L100 116" stroke="${NAVY}" stroke-width="15" stroke-linecap="round"/>
+    <path d="M90 112 Q100 102 118 110 L128 122 Q131 134 118 136 L96 136 Q86 130 90 112Z" fill="${AMBER}" stroke="${NAVY}" stroke-width="2"/>
+    <circle cx="150" cy="128" r="22" fill="#fff" stroke="${NAVY}" stroke-width="2.5"/>
+    <polygon points="150,117 160,124 156,136 144,136 140,124" fill="${NAVY}"/>
+    ${arr(150,128,222,128,"A")}${arr(150,128,150,186,"B")}${arr(150,128,150,62,"C")}`
+},
+{
+  title:"Skydiver with a Parachute",
+  text:"A skydiver has opened her parachute and is falling slowly at a steady speed.",
+  forces:[
+    {d:"The Earth pulls the skydiver downward.", type:["gravity"], cat:"field"},
+    {d:"The air pushes up against the open parachute.", type:["air"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <path d="M62 80 Q140 18 218 80 Z" fill="${TEAL}" stroke="#0b7a70" stroke-width="2"/>
+    <path d="M100 80 Q120 60 140 80 Q160 60 180 80" fill="none" stroke="#0b7a70" stroke-width="1.5"/>
+    <path d="M64 80 L126 128 M216 80 L154 128 M110 79 L126 128 M170 79 L154 128" stroke="#5b6b82" stroke-width="1.2"/>
+    <circle cx="140" cy="124" r="8" fill="#f2c9a0"/>
+    <path d="M140 132 V158 M140 138 L126 128 M140 138 L154 128 M140 158 L132 180 M140 158 L148 180" stroke="${NAVY}" stroke-width="5" stroke-linecap="round" fill="none"/>
+    ${arr(140,146,140,186,"A")}${arr(140,62,140,22,"B")}`
+},
+{
+  title:"Floating Boat",
+  text:"A small boat floats at rest on a calm lake.",
+  forces:[
+    {d:"The Earth pulls the boat downward.", type:["gravity"], cat:"field"},
+    {d:"The water pushes up on the boat's hull.", type:["buoyant"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect y="125" width="280" height="85" fill="#7fb8e0"/>
+    <path d="M0 125 q17.5 -6 35 0 t35 0 t35 0 t35 0 t35 0 t35 0 t35 0 t35 0" fill="none" stroke="#4a8fc2" stroke-width="2"/>
+    <path d="M70 108 L210 108 L188 142 L92 142 Z" fill="${AMBER}" stroke="${NAVY}" stroke-width="2"/>
+    <rect x="118" y="86" width="44" height="22" rx="3" fill="#fff" stroke="${NAVY}" stroke-width="2"/>
+    <rect x="126" y="92" width="10" height="8" fill="#7fb8e0"/><rect x="144" y="92" width="10" height="8" fill="#7fb8e0"/>
+    ${arr(140,118,140,186,"A")}${arr(140,118,140,48,"B")}`
+},
+{
+  title:"Toy on a Spring",
+  text:"A toy robot hangs at rest from a stretched spring fixed to the ceiling.",
+  forces:[
+    {d:"The stretched spring pulls the toy upward.", type:["spring","tension"], cat:"contact"},
+    {d:"The Earth pulls the toy downward.", type:["gravity"], cat:"field"}
+  ],
+  svg:()=>`${SKY}
+    <rect x="60" y="6" width="160" height="14" fill="#5b6b82"/>
+    <path d="M70 6 l-8 14 M90 6 l-8 14 M110 6 l-8 14 M130 6 l-8 14 M150 6 l-8 14 M170 6 l-8 14 M190 6 l-8 14 M210 6 l-8 14" stroke="#8a99ad" stroke-width="2"/>
+    <polyline points="140,20 140,30 128,36 152,44 128,52 152,60 128,68 152,76 128,84 140,90 140,100" fill="none" stroke="${NAVY}" stroke-width="2.5"/>
+    <rect x="108" y="100" width="64" height="44" rx="8" fill="${TEAL}"/>
+    <circle cx="128" cy="117" r="5" fill="#fff"/><circle cx="152" cy="117" r="5" fill="#fff"/>
+    <path d="M128 132 h24" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    ${arr(162,110,162,52,"A")}${arr(140,124,140,186,"B")}`
+},
+{
+  title:"Pulling a Sled",
+  text:"A child pulls a sled across the snow using a rope.",
+  forces:[
+    {d:"The tight rope pulls the sled forward.", type:["tension"], cat:"contact"},
+    {d:"The snow rubs against the bottom of the sled, opposing its motion.", type:["friction"], cat:"contact"},
+    {d:"The Earth pulls the sled downward.", type:["gravity"], cat:"field"},
+    {d:"The snowy ground pushes up on the sled.", type:["normal"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect y="152" width="280" height="58" fill="#fff"/><path d="M0 152 h280" stroke="#b9c7d8" stroke-width="2"/>
+    <rect x="58" y="118" width="84" height="22" rx="4" fill="#d64545"/>
+    <path d="M70 140 V148 M130 140 V148" stroke="${NAVY}" stroke-width="3"/>
+    <path d="M52 149 L150 149 Q160 149 158 139" fill="none" stroke="${NAVY}" stroke-width="3"/>
+    <path d="M142 126 L222 108" stroke="#8a5d33" stroke-width="2"/>
+    <circle cx="236" cy="80" r="9" fill="#f2c9a0"/>
+    <path d="M236 89 V124 M236 98 L222 108 M236 124 L226 150 M236 124 L246 150" stroke="${NAVY2()}" stroke-width="6" stroke-linecap="round" fill="none"/>
+    ${arr(142,126,194,114,"A")}${arr(100,150,44,150,"B")}${arr(94,129,94,186,"C")}${arr(106,129,106,62,"D")}`
+},
+{
+  title:"Car Braking",
+  text:"A driver brakes and the car slows down on a straight road.",
+  forces:[
+    {d:"The road grips the tyres, opposing the car's motion.", type:["friction"], cat:"contact"},
+    {d:"The air pushes against the front of the moving car.", type:["air"], cat:"contact"},
+    {d:"The Earth pulls the car downward.", type:["gravity"], cat:"field"},
+    {d:"The road pushes up on the tyres.", type:["normal"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect y="160" width="280" height="50" fill="#5b6b82"/>
+    <path d="M10 186 h30 M70 186 h30 M130 186 h30 M190 186 h30 M250 186 h30" stroke="#fff" stroke-width="3"/>
+    <path d="M88 118 L110 94 L162 94 L182 118 Z" fill="${TEAL}"/>
+    <path d="M98 116 L114 98 L134 98 L134 116 Z M140 98 L158 98 L172 116 L140 116 Z" fill="#dff1fb"/>
+    <rect x="62" y="116" width="140" height="32" rx="9" fill="${TEAL}"/>
+    <circle cx="96" cy="148" r="13" fill="${NAVY}"/><circle cx="96" cy="148" r="5" fill="#c9d3e0"/>
+    <circle cx="170" cy="148" r="13" fill="${NAVY}"/><circle cx="170" cy="148" r="5" fill="#c9d3e0"/>
+    <path d="M200 60 H248" stroke="${TEAL}" stroke-width="2" stroke-dasharray="5 4"/><polygon points="256,60 246,55 246,65" fill="${TEAL}"/>
+    <text x="226" y="50" font-size="10" font-weight="700" fill="#0b7a70" text-anchor="middle">moving</text>
+    ${arr(170,161,124,161,"A")}${arr(258,128,206,128,"B","tail")}${arr(132,132,132,186,"C")}${arr(142,132,142,62,"D")}`
+},
+{
+  title:"Fridge Magnet",
+  text:"A magnet holds a paper note on a steel fridge door. Neither the magnet nor the note slides down.",
+  forces:[
+    {d:"The steel fridge door pulls the magnet toward it.", type:["magnetic"], cat:"field"},
+    {d:"The fridge door pushes back on the magnet's flat surface.", type:["normal"], cat:"contact"},
+    {d:"The door's surface stops the magnet from sliding down.", type:["friction"], cat:"contact"},
+    {d:"The Earth pulls the magnet downward.", type:["gravity"], cat:"field"}
+  ],
+  svg:()=>`${SKY}
+    <rect x="30" y="6" width="70" height="200" rx="6" fill="#dfe7f0" stroke="#9fb0c6" stroke-width="2"/>
+    <rect x="84" y="24" width="6" height="52" rx="3" fill="#9fb0c6"/>
+    <rect x="100" y="66" width="5" height="78" fill="#fff" stroke="#b9c7d8"/>
+    <rect x="105" y="84" width="26" height="40" rx="5" fill="#d64545"/>
+    ${arr(118,96,58,96,"A")}${arr(118,112,184,112,"B")}${arr(124,100,124,36,"C")}${arr(112,108,112,180,"D")}`
+},
+{
+  title:"Charged Balloon",
+  text:"A balloon rubbed on a wool jumper is held above small bits of paper. One bit of paper jumps up toward the balloon.",
+  forces:[
+    {d:"The charged balloon pulls the bit of paper upward.", type:["electric"], cat:"field"},
+    {d:"The Earth pulls the bit of paper downward.", type:["gravity"], cat:"field"}
+  ],
+  svg:()=>`${SKY}
+    <rect x="40" y="170" width="200" height="10" rx="2" fill="#a0703f"/>
+    <ellipse cx="140" cy="42" rx="30" ry="34" fill="${AMBER}"/>
+    <path d="M135 76 L145 76 L140 83 Z" fill="#e08f2a"/>
+    <path d="M140 83 q14 10 34 4 t44 -12" fill="none" stroke="#5b6b82" stroke-width="1.5"/>
+    <path d="M118 56 h8 M136 64 h8 M154 56 h8 M126 42 h8 M146 42 h8" stroke="${NAVY}" stroke-width="2.2"/>
+    <rect x="78" y="164" width="10" height="6" fill="#fff" stroke="#9fb0c6"/><rect x="100" y="165" width="8" height="5" fill="#fff" stroke="#9fb0c6"/>
+    <rect x="176" y="164" width="10" height="6" fill="#fff" stroke="#9fb0c6"/><rect x="198" y="165" width="9" height="5" fill="#fff" stroke="#9fb0c6"/>
+    <rect x="134" y="136" width="12" height="6" fill="#fff" stroke="#9fb0c6" transform="rotate(-15 140 139)"/>
+    ${arr(140,134,140,104,"A")}${arr(140,142,140,188,"B")}`
+},
+{
+  title:"The Moon in Orbit",
+  text:"The Moon travels around the Earth in an almost circular orbit. Only one force is acting on the Moon.",
+  forces:[
+    {d:"The Earth pulls the Moon toward it.", type:["gravity"], cat:"field"}
+  ],
+  svg:()=>`<rect width="280" height="210" fill="#0f1d38"/>
+    <g fill="#fff" opacity=".8"><circle cx="20" cy="20" r="1.2"/><circle cx="250" cy="30" r="1.5"/><circle cx="200" cy="180" r="1.2"/><circle cx="40" cy="190" r="1.4"/><circle cx="160" cy="25" r="1"/><circle cx="265" cy="160" r="1.2"/><circle cx="130" cy="190" r="1"/></g>
+    <circle cx="80" cy="105" r="150" fill="none" stroke="#5b6b82" stroke-width="1.5" stroke-dasharray="4 5"/>
+    <circle cx="80" cy="105" r="40" fill="#3f8fd8"/>
+    <path d="M60 82 q14 -8 22 4 q-4 12 6 18 q-10 10 -20 0 q-12 -6 -8 -22Z M92 112 q12 -4 16 8 q-6 12 -16 6Z" fill="#58b368"/>
+    <circle cx="230" cy="105" r="15" fill="#c9cfd8"/><circle cx="225" cy="100" r="3" fill="#a9b1bd"/><circle cx="235" cy="111" r="2.5" fill="#a9b1bd"/>
+    <text x="80" y="164" font-size="11" font-weight="700" fill="#c9d3e0" text-anchor="middle">Earth</text>
+    <text x="230" y="136" font-size="11" font-weight="700" fill="#c9d3e0" text-anchor="middle">Moon</text>
+    ${arr(230,105,150,105,"A")}`
+},
+{
+  title:"Rocket Launch",
+  text:"A rocket has just lifted off and is speeding upward through the air.",
+  forces:[
+    {d:"Hot exhaust gases push the rocket upward.", type:["thrust"], cat:"contact"},
+    {d:"The Earth pulls the rocket downward.", type:["gravity"], cat:"field"},
+    {d:"The air pushes against the rocket as it moves up.", type:["air"], cat:"contact"}
+  ],
+  svg:()=>`${SKY}
+    <rect y="196" width="280" height="14" fill="#9fb0c6"/>
+    <g fill="#d6dde7"><circle cx="112" cy="190" r="12"/><circle cx="168" cy="190" r="12"/><circle cx="140" cy="194" r="10"/></g>
+    <path d="M128 150 Q140 196 152 150 Z" fill="${AMBER}"/><path d="M133 150 Q140 180 147 150 Z" fill="#d64545"/>
+    <rect x="126" y="62" width="28" height="88" rx="4" fill="#fff" stroke="${NAVY}" stroke-width="2"/>
+    <path d="M126 62 Q140 28 154 62 Z" fill="#d64545" stroke="${NAVY}" stroke-width="2"/>
+    <path d="M126 122 L110 150 L126 146 Z M154 122 L170 150 L154 146 Z" fill="${TEAL}" stroke="${NAVY}" stroke-width="2"/>
+    <circle cx="140" cy="84" r="7" fill="#7fb8e0" stroke="${NAVY}" stroke-width="2"/>
+    <path d="M232 120 V66" stroke="${TEAL}" stroke-width="2" stroke-dasharray="5 4"/><polygon points="232,58 227,68 237,68" fill="${TEAL}"/>
+    <text x="232" y="136" font-size="10" font-weight="700" fill="#0b7a70" text-anchor="middle">moving</text>
+    ${arr(140,110,140,24,"A")}${arr(100,106,100,180,"B")}${arr(180,106,180,180,"C")}`
+},
+{
+  title:"Airplane in Flight",
+  text:"An airplane flies level through the sky at a steady speed.",
+  forces:[
+    {d:"Air flowing over and under the wings pushes the plane up.", type:["lift"], cat:"contact"},
+    {d:"The engines push air backward, so the air pushes the plane forward.", type:["thrust"], cat:"contact"},
+    {d:"The air pushes against the plane, opposing its motion.", type:["air"], cat:"contact"},
+    {d:"The Earth pulls the plane downward.", type:["gravity"], cat:"field"}
+  ],
+  svg:()=>`${SKY}
+    <g fill="#fff"><ellipse cx="50" cy="40" rx="26" ry="9"/><ellipse cx="230" cy="170" rx="30" ry="10"/><ellipse cx="225" cy="45" rx="20" ry="7"/></g>
+    <path d="M68 100 L56 66 L74 66 L96 98 Z" fill="${TEAL}" stroke="${NAVY}" stroke-width="2"/>
+    <path d="M60 98 Q60 92 80 92 L180 92 Q204 94 210 104 Q204 114 180 116 L80 116 Q62 114 60 108 Z" fill="#fff" stroke="${NAVY}" stroke-width="2"/>
+    <g fill="#7fb8e0"><circle cx="96" cy="101" r="2.6"/><circle cx="108" cy="101" r="2.6"/><circle cx="120" cy="101" r="2.6"/><circle cx="150" cy="101" r="2.6"/><circle cx="162" cy="101" r="2.6"/><circle cx="174" cy="101" r="2.6"/></g>
+    <path d="M190 97 Q201 99 205 104 L190 104 Z" fill="${NAVY}"/>
+    <path d="M118 108 L150 108 L128 140 L112 140 Z" fill="${TEAL}" stroke="${NAVY}" stroke-width="2"/>
+    ${arr(135,104,135,40,"A")}${arr(210,104,252,104,"B")}${arr(60,104,24,104,"C")}${arr(135,104,135,182,"D")}`
+}
+];
+function NAVY2(){return "#1f3a68";}
+
+/* =====================================================================
+   APP LOGIC
+   ===================================================================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const TYPE_LABEL=Object.fromEntries(FORCE_TYPES.map(t=>[t.id,t.label]));
+const CAT_LABEL={field:"Field force",contact:"Contact force"};
+const LETTER=i=>String.fromCharCode(65+i);
+const LS_KEY="physicsflow_field_contact_v1";
+let checksUsed=0;
+let order=SCENARIOS.map((_,i)=>i);
+if(CONFIG.shuffleScenarios){for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}}
+
+function render(){
+  document.title="Field or Contact?";
+  $("#appTitle").textContent=CONFIG.appTitle;
+  $("#reflectQ").textContent=REFLECTION_Q;
+  if(!CONFIG.allowCheck) $("#checkStep").remove();
+  const typeOpts='<option value="">Choose the force type...</option>'+FORCE_TYPES.map(t=>`<option value="${t.id}">${t.label}</option>`).join("");
+  const catOpts='<option value="">Field or contact?</option><option value="field">Field force</option><option value="contact">Contact force</option>';
+  $("#scenarios").innerHTML=order.map((si,n)=>{
+    const s=SCENARIOS[si];
+    const rows=s.forces.map((f,fi)=>`
+      <div class="frow" data-key="${si}-${fi}">
+        <span class="badge">${LETTER(fi)}</span>
+        <span class="ftext">${f.d}</span>
+        <div class="sels">
+          <select class="sel-type" aria-label="Force ${LETTER(fi)}: type">${typeOpts}</select>
+          <select class="sel-cat" aria-label="Force ${LETTER(fi)}: field or contact">${catOpts}</select>
+        </div>
+      </div>`).join("");
+    const art=s.svg?`<div class="scene"><svg viewBox="0 0 280 210" role="img" aria-label="${s.title}">${s.svg()}</svg></div>`:"";
+    return `<article class="card" id="card-${si}">
+      <div class="chead"><span class="num">${n+1}</span><h3>${s.title}</h3><span class="status">0/${s.forces.length*2}</span></div>
+      ${art}<p class="desc">${s.text}</p><div class="forces">${rows}</div></article>`;
+  }).join("");
+}
+
+function collect(){
+  const rows=[];
+  order.forEach((si,n)=>{
+    SCENARIOS[si].forces.forEach((f,fi)=>{
+      const r=document.querySelector(`.frow[data-key="${si}-${fi}"]`);
+      const t=r.querySelector(".sel-type").value, c=r.querySelector(".sel-cat").value;
+      rows.push({n:n+1,si,fi,scen:SCENARIOS[si].title,f,t,c,tOk:!!t&&f.type.includes(t),cOk:c===f.cat,row:r});
+    });
+  });
+  return rows;
+}
+function score(){
+  const rows=collect(),N=rows.length;
+  const tc=rows.filter(r=>r.tOk).length, cc=rows.filter(r=>r.cOk).length;
+  const unanswered=rows.reduce((a,r)=>a+(r.t?0:1)+(r.c?0:1),0);
+  return {rows,N,tc,cc,total:tc+cc,max:N*2,unanswered};
+}
+
+function updateProgress(){
+  const sels=$$("#scenarios select"), filled=sels.filter(s=>s.value).length;
+  sels.forEach(s=>s.classList.toggle("filled",!!s.value));
+  $("#progTxt").textContent=`${filled} / ${sels.length} boxes completed`;
+  $("#progBar").style.width=(sels.length?100*filled/sels.length:0)+"%";
+  order.forEach(si=>{
+    const card=$("#card-"+si), cs=[...card.querySelectorAll("select")], f=cs.filter(s=>s.value).length;
+    card.querySelector(".status").textContent=`${f}/${cs.length}`;
+    card.classList.toggle("done",f===cs.length);
+  });
+}
+
+function mark(sel,cls){sel.classList.remove("ok","bad","empty");sel.classList.add(cls);}
+function updateCheckBtn(){
+  const b=$("#btnCheck");
+  if(!CONFIG.allowCheck){b.style.display="none";return;}
+  if(CONFIG.maxChecks){
+    const left=Math.max(0,CONFIG.maxChecks-checksUsed);
+    b.textContent=`Check my answers (${left} left)`;
+    b.disabled=left<=0;
+  }
+}
+function checkAnswers(){
+  if(CONFIG.maxChecks && checksUsed>=CONFIG.maxChecks){toast("You have used all your checks. Review your answers, then download your PDF.","bad");return;}
+  const sc=score();
+  if(sc.unanswered===sc.max){toast("Answer some of the questions first!","bad");return;}
+  checksUsed++;
+  sc.rows.forEach(r=>{
+    mark(r.row.querySelector(".sel-type"), r.t?(r.tOk?"ok":"bad"):"empty");
+    mark(r.row.querySelector(".sel-cat"),  r.c?(r.cOk?"ok":"bad"):"empty");
+  });
+  const res=$("#result");
+  res.innerHTML=`<strong>Check ${checksUsed}${CONFIG.maxChecks?" of "+CONFIG.maxChecks:""}:</strong> Force types ${sc.tc}/${sc.N} &nbsp;·&nbsp; Field/contact ${sc.cc}/${sc.N}
+    <span class="key"><span><i class="k ok"></i>correct</span><span><i class="k bad"></i>try again</span><span><i class="k empty"></i>not answered</span></span>`;
+  res.classList.add("show");
+  updateCheckBtn(); save();
+  toast(sc.total===sc.max?"Everything is correct. Download your PDF!":"Green boxes are correct. Fix the red ones.", sc.total===sc.max?"ok":"");
+}
+
+function save(){
+  try{
+    const data={name:$("#sName").value,grade:$("#sGrade").value,refl:$("#reflection").value,checksUsed,ans:{}};
+    $$(".frow").forEach(r=>{data.ans[r.dataset.key]=[r.querySelector(".sel-type").value,r.querySelector(".sel-cat").value];});
+    localStorage.setItem(LS_KEY,JSON.stringify(data));
+  }catch(e){}
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_KEY)||"null"); if(!d) return;
+    $("#sName").value=d.name||""; $("#sGrade").value=d.grade||""; $("#reflection").value=d.refl||"";
+    checksUsed=d.checksUsed||0;
+    Object.entries(d.ans||{}).forEach(([k,v])=>{
+      const r=document.querySelector(`.frow[data-key="${k}"]`); if(!r||!Array.isArray(v)) return;
+      r.querySelector(".sel-type").value=v[0]||""; r.querySelector(".sel-cat").value=v[1]||"";
+    });
+  }catch(e){}
+}
+function resetAll(){
+  if(!confirm("Clear all your answers and start again?")) return;
+  $$("#scenarios select").forEach(s=>{s.value="";s.classList.remove("ok","bad","empty");});
+  $("#reflection").value=""; $("#result").classList.remove("show");
+  updateProgress(); save();
+}
+
+let toastTimer;
+function toast(msg,kind){
+  const t=$("#toast"); t.textContent=msg; t.className="toast show "+(kind||"");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{t.className="toast";},3800);
+}
+
+/* ---------------------------- PDF report ---------------------------- */
+function buildPDF(){
+  const name=$("#sName").value.trim(), grade=$("#sGrade").value.trim(), refl=$("#reflection").value.trim();
+  if(!name||!grade){
+    toast("Please enter your name and grade first.","bad");
+    window.scrollTo({top:0,behavior:"smooth"}); (name?$("#sGrade"):$("#sName")).focus(); return;
+  }
+  if(/[^\u0000-\u024F\u2018-\u201D\u2026]/.test(name+grade+refl)){
+    toast("Please type your name, grade and reflection in English letters so the PDF shows them correctly.","bad"); return;
+  }
+  const sc=score();
+  if(sc.unanswered>0 && !confirm(`You still have ${sc.unanswered} empty box(es). Download your PDF anyway?`)) return;
+  if(!window.jspdf||!window.jspdf.jsPDF){toast("The PDF tool did not load. Check your internet connection and refresh the page.","bad");return;}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:"pt",format:"a4"});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  const navy=[20,40,75], amber=[242,165,65], text=[29,41,57], OK=[26,158,92], BAD=[214,69,69];
+
+  // Header band
+  doc.setFillColor(...navy); doc.rect(0,0,W,66,"F");
+  doc.setFillColor(...amber); doc.rect(0,66,W,4,"F");
+  doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(16);
+  doc.text(CONFIG.appTitle,36,32);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  doc.text("Student Submission Report",36,51);
+  doc.setFont("helvetica","bold"); doc.setTextColor(...amber); doc.text("PhysicsFlow",W-36,32,{align:"right"});
+
+  // Student info
+  const now=new Date();
+  const dateStr=now.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})+", "+now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  let y=96; doc.setFontSize(10.5); doc.setTextColor(...text);
+  const pair=(lab,val,x,yy,off)=>{doc.setFont("helvetica","bold");doc.text(lab,x,yy);doc.setFont("helvetica","normal");doc.text(String(val),x+off,yy);};
+  pair("Name:",name,36,y,40); pair("Grade / Class:",grade,320,y,80);
+  y+=17;
+  pair("Submitted:",dateStr,36,y,62);
+  if(CONFIG.allowCheck) pair("Answer checks used:",`${checksUsed}${CONFIG.maxChecks?" of "+CONFIG.maxChecks:""}`,320,y,112);
+
+  // Score boxes
+  y+=16;
+  const gap=12, bw=(W-72-2*gap)/3, pct=Math.round(100*sc.total/sc.max);
+  const box=(x,label,val,sub,bg,bd,tx)=>{
+    doc.setFillColor(...bg); doc.setDrawColor(...bd); doc.setLineWidth(1);
+    doc.roundedRect(x,y,bw,52,6,6,"FD");
+    doc.setTextColor(...tx); doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.text(label.toUpperCase(),x+10,y+16);
+    doc.setFontSize(18); doc.text(val,x+10,y+41);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.text(sub,x+bw-10,y+41,{align:"right"});
+  };
+  box(36,"Force types",`${sc.tc} / ${sc.N}`,"correct",[224,244,241],[15,155,142],[11,122,112]);
+  box(36+bw+gap,"Field / contact",`${sc.cc} / ${sc.N}`,"correct",[255,243,224],[242,165,65],[168,101,15]);
+  box(36+2*(bw+gap),"Total score",`${pct}%`,`${sc.total} / ${sc.max} marks`,[232,237,246],[20,40,75],[20,40,75]);
+  y+=68;
+
+  // Answers table
+  const head=[["#","Scenario","Force","Force type chosen","Field / contact","Mark"]];
+  if(CONFIG.showCorrectInPDF) head[0].push("Correct answer");
+  const body=sc.rows.map(r=>{
+    const first=r.fi===0;
+    const row=[first?String(r.n):"",first?r.scen:"",`${LETTER(r.fi)}. ${r.f.d}`,
+      r.t?TYPE_LABEL[r.t]:"(blank)", r.c?CAT_LABEL[r.c]:"(blank)", `${(r.tOk?1:0)+(r.cOk?1:0)}/2`];
+    if(CONFIG.showCorrectInPDF) row.push(`${TYPE_LABEL[r.f.type[0]]} - ${CAT_LABEL[r.f.cat]}`);
+    return row;
+  });
+  const colStyles={0:{cellWidth:18,halign:"center"},1:{cellWidth:66,fontStyle:"bold"},3:{cellWidth:82},4:{cellWidth:62},5:{cellWidth:32,halign:"center"}};
+  if(CONFIG.showCorrectInPDF) colStyles[6]={cellWidth:88};
+  doc.autoTable({
+    startY:y, head, body, theme:"grid",
+    margin:{left:36,right:36,top:40,bottom:40},
+    styles:{font:"helvetica",fontSize:8,cellPadding:4,valign:"middle",textColor:text,lineColor:[219,227,238],lineWidth:.6},
+    headStyles:{fillColor:navy,textColor:255,fontStyle:"bold"},
+    columnStyles:colStyles,
+    didParseCell:d=>{
+      if(d.section!=="body") return;
+      const r=sc.rows[d.row.index];
+      if(r.n%2===0) d.cell.styles.fillColor=[246,248,252];
+      if(d.column.index===3){d.cell.styles.textColor=r.tOk?OK:BAD; if(!r.t) d.cell.styles.fontStyle="italic";}
+      if(d.column.index===4){d.cell.styles.textColor=r.cOk?OK:BAD; if(!r.c) d.cell.styles.fontStyle="italic";}
+      if(d.column.index===5){
+        const m=(r.tOk?1:0)+(r.cOk?1:0);
+        d.cell.styles.fillColor=m===2?[227,246,236]:m===1?[255,243,224]:[253,232,232];
+        d.cell.styles.fontStyle="bold";
+      }
+    }
+  });
+
+  // Reflection
+  let y2=doc.lastAutoTable.finalY+24;
+  if(y2>H-170){doc.addPage(); y2=50;}
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...navy); doc.text("Reflection",36,y2); y2+=14;
+  doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(91,107,130);
+  const q=doc.splitTextToSize(REFLECTION_Q,W-72); doc.text(q,36,y2); y2+=q.length*11+6;
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...text);
+  const lines=doc.splitTextToSize(refl||"(no answer)",W-92);
+  const bh=Math.max(40,lines.length*13+16);
+  if(y2+bh>H-50){doc.addPage(); y2=50;}
+  doc.setDrawColor(219,227,238); doc.setFillColor(251,252,254); doc.roundedRect(36,y2,W-72,bh,6,6,"FD");
+  doc.text(lines,46,y2+18); y2+=bh+22;
+
+  // Teacher comments
+  if(y2+80>H-50){doc.addPage(); y2=50;}
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...navy); doc.text("Teacher comments",36,y2); y2+=8;
+  doc.setDrawColor(185,199,216); doc.roundedRect(36,y2,W-72,64,6,6,"S");
+
+  // Footer on every page
+  const pages=doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(120,130,145);
+    doc.text(`${name}  |  ${grade}  |  ${CONFIG.appTitle}`,36,H-20);
+    doc.text(`Page ${p} of ${pages}`,W-36,H-20,{align:"right"});
+  }
+
+  const safe=s=>s.replace(/[^A-Za-z0-9_-]+/g,"_").replace(/^_+|_+$/g,"");
+  doc.save(`Forces_${safe(name)}_${safe(grade)}.pdf`);
+  toast("PDF downloaded. Submit it to your teacher.","ok");
+}
+
+/* ------------------------------ start ------------------------------ */
+render();
+load();
+updateProgress();
+updateCheckBtn();
+$("#scenarios").addEventListener("change",e=>{
+  if(e.target.tagName==="SELECT"){e.target.classList.remove("ok","bad","empty"); updateProgress(); save();}
+});
+["#sName","#sGrade","#reflection"].forEach(s=>$(s).addEventListener("input",save));
+$("#btnCheck").addEventListener("click",checkAnswers);
+$("#btnPdf").addEventListener("click",buildPDF);
+$("#btnReset").addEventListener("click",resetAll);
+</script>
+</body>
+</html>
